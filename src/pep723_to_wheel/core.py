@@ -104,6 +104,15 @@ def _normalize_module_name(name: str) -> str:
     return module_name
 
 
+def _format_dependencies_block(dependencies: list[str]) -> list[str]:
+    lines = ["dependencies = ["]
+    if dependencies:
+        deps_formatted = ",\n    ".join(f"\"{dep}\"" for dep in dependencies)
+        lines.append(f"    {deps_formatted}")
+    lines.append("]")
+    return lines
+
+
 def _extract_requires_dist(metadata_text: str) -> list[str]:
     requirements: list[str] = []
     for line in metadata_text.splitlines():
@@ -160,13 +169,9 @@ def _build_temp_project(
         ]
         if requires_python:
             toml_lines.append(f'requires-python = "{requires_python}"')
-        toml_lines.append("dependencies = [")
-        if dependencies:
-            deps_formatted = ",\n    ".join(f"\"{dep}\"" for dep in dependencies)
-            toml_lines.append(f"    {deps_formatted}")
+        toml_lines.extend(_format_dependencies_block(dependencies))
         toml_lines.extend(
             [
-                "]",
                 "",
                 "[build-system]",
                 'requires = ["hatchling>=1.27.0"]',
@@ -312,6 +317,13 @@ def _build_script_from_metadata(wheel_path: Path) -> str:
     return "\n".join(lines)
 
 
+def _script_text_from_wheel(wheel_path: Path) -> str:
+    script_text = _read_script_from_wheel(wheel_path)
+    if script_text is None:
+        script_text = _build_script_from_metadata(wheel_path)
+    return script_text
+
+
 def import_wheel_to_script(
     wheel_or_package: str,
     output_path: Path,
@@ -328,17 +340,12 @@ def import_wheel_to_script(
 
     wheel_path = Path(wheel_or_package)
     if wheel_path.exists():
-        wheel_to_read = wheel_path
-        script_text = _read_script_from_wheel(wheel_to_read)
-        if script_text is None:
-            script_text = _build_script_from_metadata(wheel_to_read)
+        script_text = _script_text_from_wheel(wheel_path)
     else:
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
             wheel_to_read = _download_wheel(wheel_or_package, temp_path)
-            script_text = _read_script_from_wheel(wheel_to_read)
-            if script_text is None:
-                script_text = _build_script_from_metadata(wheel_to_read)
+            script_text = _script_text_from_wheel(wheel_to_read)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(script_text, encoding="utf-8")

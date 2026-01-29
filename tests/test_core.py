@@ -1,6 +1,7 @@
-from pathlib import Path
-from datetime import datetime
 import os
+from datetime import datetime
+from pathlib import Path
+import zipfile
 
 from pep723_to_wheel import core
 
@@ -134,3 +135,60 @@ def test_build_defaults_to_mtime_calver(tmp_path: Path) -> None:
 
     assert "2024.12.25" in result.wheel_path.name
     assert str(int(fixed_timestamp)) in result.wheel_path.name
+
+
+def test_build_script_from_metadata_prefers_package_name_as_dependency(
+    tmp_path: Path,
+) -> None:
+    wheel_path = tmp_path / "sample-1.0.0-py3-none-any.whl"
+    metadata = "\n".join(
+        [
+            "Metadata-Version: 2.3",
+            "Name: My-Package",
+            "Version: 1.0.0",
+            "Requires-Python: >=3.12",
+            "Requires-Dist: requests>=2.0",
+            "",
+        ]
+    )
+    with zipfile.ZipFile(wheel_path, "w") as wheel:
+        wheel.writestr("my_package/__init__.py", "")
+        wheel.writestr("my_package-1.0.0.dist-info/METADATA", metadata)
+
+    script_text = core._build_script_from_metadata(wheel_path)
+
+    assert script_text == "\n".join(
+        [
+            "# /// script",
+            '# requires-python = ">=3.12"',
+            '# dependencies = ["My-Package", "requests>=2.0"]',
+            "# ///",
+            "import my_package",
+            "",
+        ]
+    )
+
+
+def test_import_uses_embedded_script_when_present(tmp_path: Path) -> None:
+    wheel_path = tmp_path / "sample-1.0.0-py3-none-any.whl"
+    script_contents = "\n".join(
+        [
+            "# /// script",
+            '# requires-python = ">=3.12"',
+            "# ///",
+            "print('hello from wheel')",
+            "",
+        ]
+    )
+    with zipfile.ZipFile(wheel_path, "w") as wheel:
+        wheel.writestr("package/script.py", script_contents)
+        wheel.writestr("package/__init__.py", "")
+        wheel.writestr(
+            "package-1.0.0.dist-info/METADATA",
+            "Metadata-Version: 2.3\nName: package\nVersion: 1.0.0\n",
+        )
+
+    output_path = tmp_path / "imported.py"
+    result = core.import_wheel_to_script(str(wheel_path), output_path)
+
+    assert result.script_path.read_text(encoding="utf-8") == script_contents
