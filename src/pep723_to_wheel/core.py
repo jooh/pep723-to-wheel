@@ -132,11 +132,16 @@ def _build_temp_project(
             cwd=temp_path,
         )
 
-        wheels = sorted(temp_output_dir.glob("*.whl"), key=lambda path: path.stat().st_mtime)
+        wheels = list(temp_output_dir.glob("*.whl"))
         if not wheels:
             raise FileNotFoundError(f"No wheel produced in {temp_output_dir}")
+        if len(wheels) > 1:
+            raise RuntimeError(
+                f"Expected exactly one wheel in {temp_output_dir}, found {len(wheels)}: "
+                f"{', '.join(str(w) for w in wheels)}"
+            )
         output_dir.mkdir(parents=True, exist_ok=True)
-        built_wheel = wheels[-1]
+        built_wheel = wheels[0]
         dest_wheel = output_dir / built_wheel.name
         shutil.copy2(built_wheel, dest_wheel)
         return dest_wheel
