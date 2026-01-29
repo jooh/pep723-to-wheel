@@ -38,7 +38,7 @@ class Pep723Header(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    requires_python: str = Field(default=">=3.12", alias="requires-python")
+    requires_python: str | None = Field(default=None, alias="requires-python")
     dependencies: list[str] = Field(default_factory=list)
 
     @classmethod
@@ -53,9 +53,9 @@ class Pep723Header(BaseModel):
     def render_block(self) -> str:
         """Render the PEP 723 header block."""
 
-        body_lines: list[str] = [
-            f'requires-python = "{self.requires_python}"',
-        ]
+        body_lines: list[str] = []
+        if self.requires_python:
+            body_lines.append(f'requires-python = "{self.requires_python}"')
         if self.dependencies:
             deps_formatted = ", ".join(f'"{dep}"' for dep in self.dependencies)
             body_lines.append(f"dependencies = [{deps_formatted}]")
@@ -87,7 +87,7 @@ def _parse_pep723_kv(block: str) -> dict:
     if not block.strip():
         return {}
     cleaned = "\n".join(
-        line.removeprefix("# ").removeprefix("#") for line in block.splitlines()
+        line.lstrip("#").lstrip() for line in block.splitlines()
     )
     return tomllib.loads(cleaned)
 
@@ -157,9 +157,10 @@ def _build_temp_project(
             f'name = "{project_name}"',
             f'version = "{version}"',
             'description = "PEP 723 script bundle"',
-            f'requires-python = "{requires_python}"',
-            "dependencies = [",
         ]
+        if requires_python:
+            toml_lines.append(f'requires-python = "{requires_python}"')
+        toml_lines.append("dependencies = [")
         if dependencies:
             deps_formatted = ",\n    ".join(f"\"{dep}\"" for dep in dependencies)
             toml_lines.append(f"    {deps_formatted}")
@@ -301,7 +302,7 @@ def _build_script_from_metadata(wheel_path: Path) -> str:
     all_packages = [package_name]
     all_packages.extend(dep for dep in requires if dep not in all_packages)
     header = Pep723Header(
-        requires_python=requires_python or ">=3.12",
+        requires_python=requires_python,
         dependencies=all_packages,
     )
     lines = [header.render_block()]
