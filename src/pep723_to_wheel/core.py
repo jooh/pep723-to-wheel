@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 import re
+import shutil
 import subprocess
 import tempfile
 import tomllib
@@ -119,17 +120,46 @@ def _build_temp_project(
             encoding="utf-8",
         )
 
-        output_dir.mkdir(parents=True, exist_ok=True)
+        temp_output_dir = temp_path / "dist"
+        temp_output_dir.mkdir(parents=True, exist_ok=True)
         subprocess.run(
-            ["uv", "build", "--wheel", "--out-dir", str(output_dir)],
+            ["uv", "build", "--wheel", "--out-dir", str(temp_output_dir)],
             check=True,
             cwd=temp_path,
         )
 
-    wheels = sorted(output_dir.glob("*.whl"))
-    if not wheels:
-        raise FileNotFoundError(f"No wheel produced in {output_dir}")
-    return wheels[-1]
+        wheels = sorted(temp_output_dir.glob("*.whl"), key=lambda path: path.stat().st_mtime)
+        if not wheels:
+            raise FileNotFoundError(f"No wheel produced in {temp_output_dir}")
+        output_dir.mkdir(parents=True, exist_ok=True)
+        built_wheel = wheels[-1]
+        dest_wheel = output_dir / built_wheel.name
+        shutil.copy2(built_wheel, dest_wheel)
+        return dest_wheel
+
+
+def _find_import_name(wheel: zipfile.ZipFile, package_name: str) -> str | None:
+    normalized_package = package_name.replace("-", "_")
+    candidates: set[str] = set()
+    for name in wheel.namelist():
+        if name.endswith("/"):
+            continue
+        parts = name.split("/")
+        if len(parts) == 1 and name.endswith(".py"):
+            candidates.add(Path(name).stem)
+            continue
+        if len(parts) >= 2 and parts[-1] == "__init__.py":
+            top_level = parts[0]
+            if top_level.endswith(".dist-info") or top_level.endswith(".data"):
+                continue
+            if top_level.startswith("__"):
+                continue
+            candidates.add(top_level)
+    if normalized_package in candidates:
+        return normalized_package
+    if len(candidates) == 1:
+        return next(iter(candidates))
+    return None
 
 
 def build_script_to_wheel(script_path: Path, output_dir: Path | None = None) -> BuildResult:
@@ -187,26 +217,27 @@ def _build_script_from_metadata(wheel_path: Path) -> str:
         if metadata_name is None:
             raise ValueError("Wheel metadata not found.")
         metadata_text = wheel.read(metadata_name).decode("utf-8")
-    name_line = next(
-        (line for line in metadata_text.splitlines() if line.startswith("Name: ")),
-        None,
-    )
-    if name_line is None:
-        raise ValueError("Wheel metadata missing Name field.")
-    package_name = name_line.replace("Name: ", "", 1).strip()
+        name_line = next(
+            (line for line in metadata_text.splitlines() if line.startswith("Name: ")),
+            None,
+        )
+        if name_line is None:
+            raise ValueError("Wheel metadata missing Name field.")
+        package_name = name_line.replace("Name: ", "", 1).strip()
+        import_name = _find_import_name(wheel, package_name)
     requires = _extract_requires_dist(metadata_text)
     dependencies = [package_name]
     dependencies.extend(dep for dep in requires if dep not in dependencies)
     deps_formatted = ", ".join(f'"{dep}"' for dep in dependencies)
-    return "\n".join(
-        [
-            "# /// script",
-            f"# dependencies = [{deps_formatted}]",
-            "# ///",
-            f"import {package_name.replace('-', '_')}",
-            "",
-        ]
-    )
+    lines = [
+        "# /// script",
+        f"# dependencies = [{deps_formatted}]",
+        "# ///",
+    ]
+    if import_name:
+        lines.append(f"import {import_name}")
+    lines.append("")
+    return "\n".join(lines)
 
 
 def import_wheel_to_script(
