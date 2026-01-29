@@ -73,7 +73,7 @@ def _extract_requires_dist(metadata_text: str) -> list[str]:
 def _calendar_version(script_path: Path) -> str:
     mtime = script_path.stat().st_mtime
     timestamp = datetime.fromtimestamp(mtime)
-    return f"{timestamp:%Y.%m.%d}.{int(mtime)}"
+    return f"{timestamp.year}.{timestamp.month}.{timestamp.day}.{int(mtime)}"
 
 
 def _build_temp_project(
