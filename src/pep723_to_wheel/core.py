@@ -14,6 +14,7 @@ import zipfile
 
 PEP723_START = "# /// script"
 PEP723_END = "# ///"
+UTC = timezone.utc
 
 
 @dataclass(frozen=True)
@@ -72,7 +73,7 @@ def _extract_requires_dist(metadata_text: str) -> list[str]:
 
 def _calendar_version(script_path: Path) -> str:
     mtime = script_path.stat().st_mtime
-    timestamp = datetime.fromtimestamp(mtime, tz=timezone.utc)
+    timestamp = datetime.fromtimestamp(mtime, tz=UTC)
     return f"{timestamp.year}.{timestamp.month}.{timestamp.day}.{int(mtime)}"
 
 
