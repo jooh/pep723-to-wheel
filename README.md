@@ -12,6 +12,12 @@ Build a wheel from a script that has a PEP 723 inline block:
 pep723-to-wheel build path/to/script.py --output-dir dist
 ```
 
+Set an explicit wheel version (defaults to calendar versioning using the script mtime as the patch segment):
+
+```bash
+pep723-to-wheel build path/to/script.py --version 2024.12.25
+```
+
 Reconstruct a script from a wheel or package name:
 
 ```bash

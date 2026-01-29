@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 import re
 import shutil
@@ -69,9 +70,16 @@ def _extract_requires_dist(metadata_text: str) -> list[str]:
     return requirements
 
 
+def _calendar_version(script_path: Path) -> str:
+    mtime = script_path.stat().st_mtime
+    timestamp = datetime.fromtimestamp(mtime)
+    return f"{timestamp:%Y.%m.%d}.{int(mtime)}"
+
+
 def _build_temp_project(
     script_path: Path,
     output_dir: Path,
+    version: str,
 ) -> Path:
     pep723 = _parse_pep723_block(script_path)
     dependencies = pep723.get("dependencies", [])
@@ -98,7 +106,7 @@ def _build_temp_project(
         toml_lines = [
             "[project]",
             f'name = "{project_name}"',
-            'version = "0.1.0"',
+            f'version = "{version}"',
             'description = "PEP 723 script bundle"',
             f'requires-python = "{requires_python}"',
             "dependencies = [",
@@ -171,7 +179,11 @@ def _find_import_name(wheel: zipfile.ZipFile, package_name: str) -> str | None:
     return None
 
 
-def build_script_to_wheel(script_path: Path, output_dir: Path | None = None) -> BuildResult:
+def build_script_to_wheel(
+    script_path: Path,
+    output_dir: Path | None = None,
+    version: str | None = None,
+) -> BuildResult:
     """Build a wheel from a PEP 723 script.
 
     Args:
@@ -185,7 +197,8 @@ def build_script_to_wheel(script_path: Path, output_dir: Path | None = None) -> 
     if not script_path.exists():
         raise FileNotFoundError(script_path)
     target_dir = output_dir or script_path.parent / "dist"
-    wheel_path = _build_temp_project(script_path, target_dir)
+    resolved_version = version or _calendar_version(script_path)
+    wheel_path = _build_temp_project(script_path, target_dir, resolved_version)
     return BuildResult(wheel_path=wheel_path)
 
 

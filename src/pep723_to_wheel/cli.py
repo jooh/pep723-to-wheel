@@ -17,10 +17,16 @@ def build_command(
     output_dir: Path | None = typer.Option(
         None, "--output-dir", "-o", help="Directory for the built wheel."
     ),
+    version: str | None = typer.Option(
+        None,
+        "--version",
+        "-v",
+        help="Wheel version (defaults to calendar versioning).",
+    ),
 ) -> None:
     """Build a wheel from a PEP 723 script."""
 
-    result = build_script_to_wheel(script_path, output_dir)
+    result = build_script_to_wheel(script_path, output_dir, version)
     typer.echo(str(result.wheel_path))
 
 
