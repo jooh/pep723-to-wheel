@@ -35,6 +35,36 @@ def test_build_and_import_round_trip(tmp_path: Path) -> None:
     )
 
 
+def test_pep723_header_parsing_and_render(tmp_path: Path) -> None:
+    script = tmp_path / "script.py"
+    script.write_text(
+        "\n".join(
+            [
+                "# /// script",
+                '# requires-python = ">=3.12"',
+                '# dependencies = ["pydantic>=2.5", "httpx"]',
+                "# ///",
+                "print('hello')",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    header = core.Pep723Header.from_script(script)
+
+    assert header.requires_python == ">=3.12"
+    assert header.dependencies == ["pydantic>=2.5", "httpx"]
+    assert header.render_block() == "\n".join(
+        [
+            "# /// script",
+            '# requires-python = ">=3.12"',
+            '# dependencies = ["pydantic>=2.5", "httpx"]',
+            "# ///",
+        ]
+    )
+
+
 def test_build_uses_specified_version(tmp_path: Path) -> None:
     script = tmp_path / "script.py"
     script.write_text(

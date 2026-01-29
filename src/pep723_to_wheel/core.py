@@ -12,6 +12,8 @@ import tempfile
 import tomllib
 import zipfile
 
+from pydantic import BaseModel, ConfigDict, Field
+
 PEP723_START = "# /// script"
 PEP723_END = "# ///"
 UTC = timezone.utc
@@ -31,24 +33,63 @@ class ImportResult:
     script_path: Path
 
 
-def _parse_pep723_block(script_path: Path) -> dict:
-    content = script_path.read_text(encoding="utf-8").splitlines()
+class Pep723Header(BaseModel):
+    """PEP 723 script metadata."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    requires_python: str = Field(default=">=3.12", alias="requires-python")
+    dependencies: list[str] = Field(default_factory=list)
+
+    @classmethod
+    def from_script(cls, script_path: Path) -> "Pep723Header":
+        """Extract and parse a PEP 723 header from a script file."""
+
+        text = script_path.read_text(encoding="utf-8")
+        block = _extract_pep723_block(text)
+        data = _parse_pep723_kv(block)
+        return cls.model_validate(data)
+
+    def render_block(self) -> str:
+        """Render the PEP 723 header block."""
+
+        body_lines: list[str] = [
+            f'requires-python = "{self.requires_python}"',
+        ]
+        if self.dependencies:
+            deps_formatted = ", ".join(f'"{dep}"' for dep in self.dependencies)
+            body_lines.append(f"dependencies = [{deps_formatted}]")
+        return "\n".join(
+            [
+                PEP723_START,
+                *[f"# {line}" for line in body_lines],
+                PEP723_END,
+            ]
+        )
+
+
+def _extract_pep723_block(text: str) -> str:
+    lines = text.splitlines()
     inside_block = False
-    toml_lines: list[str] = []
-    for line in content:
+    block_lines: list[str] = []
+    for line in lines:
         if line.strip() == PEP723_START:
             inside_block = True
             continue
         if line.strip() == PEP723_END and inside_block:
             break
         if inside_block:
-            if line.startswith("#"):
-                toml_lines.append(line.lstrip("#").lstrip())
-            else:
-                toml_lines.append(line)
-    if not toml_lines:
+            block_lines.append(line)
+    return "\n".join(block_lines)
+
+
+def _parse_pep723_kv(block: str) -> dict:
+    if not block.strip():
         return {}
-    return tomllib.loads("\n".join(toml_lines))
+    cleaned = "\n".join(
+        line.removeprefix("# ").removeprefix("#") for line in block.splitlines()
+    )
+    return tomllib.loads(cleaned)
 
 
 def _normalize_project_name(name: str) -> str:
@@ -71,6 +112,13 @@ def _extract_requires_dist(metadata_text: str) -> list[str]:
     return requirements
 
 
+def _extract_requires_python(metadata_text: str) -> str | None:
+    for line in metadata_text.splitlines():
+        if line.startswith("Requires-Python:"):
+            return line.replace("Requires-Python:", "", 1).strip()
+    return None
+
+
 def _calendar_version(script_path: Path) -> str:
     mtime = script_path.stat().st_mtime
     timestamp = datetime.fromtimestamp(mtime, tz=UTC)
@@ -82,9 +130,9 @@ def _build_temp_project(
     output_dir: Path,
     version: str,
 ) -> Path:
-    pep723 = _parse_pep723_block(script_path)
-    dependencies = pep723.get("dependencies", [])
-    requires_python = pep723.get("requires-python", ">=3.12")
+    pep723 = Pep723Header.from_script(script_path)
+    dependencies = pep723.dependencies
+    requires_python = pep723.requires_python
 
     project_name = _normalize_project_name(script_path.stem)
     module_name = _normalize_module_name(project_name)
@@ -249,14 +297,14 @@ def _build_script_from_metadata(wheel_path: Path) -> str:
         package_name = name_line.replace("Name: ", "", 1).strip()
         import_name = _find_import_name(wheel, package_name)
     requires = _extract_requires_dist(metadata_text)
+    requires_python = _extract_requires_python(metadata_text)
     all_packages = [package_name]
     all_packages.extend(dep for dep in requires if dep not in all_packages)
-    deps_formatted = ", ".join(f'"{dep}"' for dep in all_packages)
-    lines = [
-        "# /// script",
-        f"# dependencies = [{deps_formatted}]",
-        "# ///",
-    ]
+    header = Pep723Header(
+        requires_python=requires_python or ">=3.12",
+        dependencies=all_packages,
+    )
+    lines = [header.render_block()]
     if import_name:
         lines.append(f"import {import_name}")
     lines.append("")
