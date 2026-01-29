@@ -226,9 +226,9 @@ def _build_script_from_metadata(wheel_path: Path) -> str:
         package_name = name_line.replace("Name: ", "", 1).strip()
         import_name = _find_import_name(wheel, package_name)
     requires = _extract_requires_dist(metadata_text)
-    dependencies = [package_name]
-    dependencies.extend(dep for dep in requires if dep not in dependencies)
-    deps_formatted = ", ".join(f'"{dep}"' for dep in dependencies)
+    all_packages = [package_name]
+    all_packages.extend(dep for dep in requires if dep not in all_packages)
+    deps_formatted = ", ".join(f'"{dep}"' for dep in all_packages)
     lines = [
         "# /// script",
         f"# dependencies = [{deps_formatted}]",
