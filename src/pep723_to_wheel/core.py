@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 import re
 import shutil
@@ -72,7 +72,7 @@ def _extract_requires_dist(metadata_text: str) -> list[str]:
 
 def _calendar_version(script_path: Path) -> str:
     mtime = script_path.stat().st_mtime
-    timestamp = datetime.fromtimestamp(mtime)
+    timestamp = datetime.fromtimestamp(mtime, tz=timezone.utc)
     return f"{timestamp.year}.{timestamp.month}.{timestamp.day}.{int(mtime)}"
 
 
