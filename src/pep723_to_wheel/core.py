@@ -95,28 +95,32 @@ def _build_temp_project(
         )
 
         pyproject = temp_path / "pyproject.toml"
-        deps_formatted = ",\n    ".join(f"\"{dep}\"" for dep in dependencies)
+        toml_lines = [
+            "[project]",
+            f'name = "{project_name}"',
+            'version = "0.1.0"',
+            'description = "PEP 723 script bundle"',
+            f'requires-python = "{requires_python}"',
+            "dependencies = [",
+        ]
+        if dependencies:
+            deps_formatted = ",\n    ".join(f"\"{dep}\"" for dep in dependencies)
+            toml_lines.append(f"    {deps_formatted}")
+        toml_lines.extend(
+            [
+                "]",
+                "",
+                "[build-system]",
+                'requires = ["hatchling>=1.27.0"]',
+                'build-backend = "hatchling.build"',
+                "",
+                "[tool.hatch.build.targets.wheel]",
+                f'packages = ["src/{module_name}"]',
+                "",
+            ]
+        )
         pyproject.write_text(
-            "\n".join(
-                [
-                    "[project]",
-                    f'name = "{project_name}"',
-                    'version = "0.1.0"',
-                    'description = "PEP 723 script bundle"',
-                    f'requires-python = "{requires_python}"',
-                    "dependencies = [",
-                    f"    {deps_formatted}" if dependencies else "",
-                    "]",
-                    "",
-                    "[build-system]",
-                    'requires = ["hatchling>=1.27.0"]',
-                    'build-backend = "hatchling.build"',
-                    "",
-                    "[tool.hatch.build.targets.wheel]",
-                    f'packages = ["src/{module_name}"]',
-                    "",
-                ]
-            ),
+            "\n".join(toml_lines),
             encoding="utf-8",
         )
 
