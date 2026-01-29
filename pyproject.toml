@@ -21,5 +21,6 @@ packages = ["src/pep723_to_wheel"]
 [dependency-groups]
 dev = [
     "pytest>=9.0.2",
+    "ruff>=0.9.10",
     "ty>=0.0.14",
 ]

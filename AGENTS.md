@@ -12,6 +12,7 @@
 ## Common commands
 - Run tests: `make test`
 - Run type checks: `make typecheck`
+- Run ruff checks: `make ruff`
 
 ## Style and conventions
 - TDD for all code development - write test, then run to verify it fails, then develop, then verify the test passes.

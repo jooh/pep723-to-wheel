@@ -43,4 +43,5 @@ print(import_result.script_path)
 ```bash
 make test
 make typecheck
+make ruff
 ```
