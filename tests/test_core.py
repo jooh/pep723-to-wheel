@@ -70,7 +70,6 @@ def test_build_defaults_to_mtime_calver(tmp_path: Path) -> None:
         encoding="utf-8",
     )
     fixed_timestamp = datetime(2024, 12, 25, 12, 34, 56).timestamp()
-    script.touch()
     os.utime(script, (fixed_timestamp, fixed_timestamp))
 
     result = core.build_script_to_wheel(script, tmp_path)
