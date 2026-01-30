@@ -46,7 +46,7 @@ def _(pl):
 @app.cell
 def _(df, mo):
     _df = mo.sql(
-        f"""
+        """
         SELECT a FROM df
         """
     )
