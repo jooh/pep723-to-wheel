@@ -3,7 +3,7 @@
 [![CI](https://github.com/jooh/pep723-to-wheel/actions/workflows/ci.yml/badge.svg)](https://github.com/jooh/pep723-to-wheel/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/jooh/pep723-to-wheel/branch/main/graph/badge.svg?token=PS0IS5TVBV)](https://codecov.io/gh/jooh/pep723-to-wheel)
 
-A small utility for converting [PEP 723](https://peps.python.org/pep-0723/) inline dependency scripts into wheels and reconstructing scripts from wheels.
+A small utility for converting [PEP 723](https://peps.python.org/pep-0723/) inline dependency scripts into wheels and reconstructing scripts from wheels. Especially useful for taking [reproducible Marimo notebooks](https://marimo.io/blog/sandboxed-notebooks) to production environments.
 
 ## CLI
 
