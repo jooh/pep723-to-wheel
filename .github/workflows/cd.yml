@@ -6,6 +6,7 @@ on:
 
 permissions:
   contents: write
+  id-token: write
 
 jobs:
   publish:
@@ -18,7 +19,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@v6
       - name: Determine version
         id: version
         run: |
@@ -43,12 +44,10 @@ jobs:
             git tag "$VERSION"
             git push origin "$VERSION"
           fi
-      - name: Build wheel
-        run: uv build --wheel
-      - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          password: ${{ secrets.PYPI_API_TOKEN }}
+      - name: Build
+        run: uv build
+      - name: Publish to PyPI (Trusted Publishing)
+        run: uv publish
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
