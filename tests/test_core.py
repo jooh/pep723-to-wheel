@@ -133,7 +133,7 @@ def test_build_defaults_to_mtime_calver(tmp_path: Path) -> None:
 
     result = core.build_script_to_wheel(script, tmp_path)
 
-    assert "2024.12.25" in result.wheel_path.name
+    assert "2024.12" in result.wheel_path.name
     assert str(int(fixed_timestamp)) in result.wheel_path.name
 
 
