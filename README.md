@@ -46,3 +46,17 @@ make test
 make typecheck
 make ruff
 ```
+
+## Release process
+
+Releases are automated on pushes to `main` by the CD workflow in `.github/workflows/cd.yml`.
+
+1. The workflow determines the latest `v*` Git tag and runs `.github/workflows/cd_version.py` to
+   resolve the next version. If the latest tag matches the current major/minor, it bumps the patch
+   to one higher than the max of the current patch and the tag patch.
+2. If `pyproject.toml` changes, the workflow commits the version bump back to `main`.
+3. It tags the release as `v<version>`, builds the wheel with `uv build --wheel`, publishes to
+   PyPI, and creates a GitHub release with the wheel attached.
+
+To trigger a release, merge or push changes to `main` and ensure `PYPI_API_TOKEN` is configured in
+the repository secrets.
