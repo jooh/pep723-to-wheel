@@ -2,10 +2,15 @@ from __future__ import annotations
 
 import importlib.util
 import sys
+from typing import Protocol, cast
 from pathlib import Path
 
 
-def load_cd_version() -> object:
+class CdVersionModule(Protocol):
+    def main(self) -> None: ...
+
+
+def load_cd_version() -> CdVersionModule:
     repo_root = Path(__file__).resolve().parents[1]
     script_path = repo_root / ".github" / "workflows" / "cd_version.py"
     spec = importlib.util.spec_from_file_location("cd_version", script_path)
@@ -13,7 +18,7 @@ def load_cd_version() -> object:
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
-    return module
+    return cast(CdVersionModule, module)
 
 
 def write_pyproject(path: Path, version: str) -> None:
