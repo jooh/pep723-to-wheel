@@ -4,11 +4,23 @@ version = "0.1.0"
 description = "PoC for pep-723 script to wheel and back"
 readme = "README.md"
 requires-python = ">=3.12"
+license = { file = "LICENSE" }
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+]
 dependencies = [
     "pydantic>=2.5",
     "tomli-w>=1.1.0",
     "typer>=0.21.1",
 ]
+
+[project.urls]
+Homepage = "https://github.com/jooh/pep723-to-wheel"
+Repository = "https://github.com/jooh/pep723-to-wheel"
+Issues = "https://github.com/jooh/pep723-to-wheel/issues"
 
 [project.scripts]
 pep723-to-wheel = "pep723_to_wheel.cli:app"
