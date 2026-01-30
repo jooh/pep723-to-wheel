@@ -192,3 +192,20 @@ def test_import_uses_embedded_script_when_present(tmp_path: Path) -> None:
     result = core.import_wheel_to_script(str(wheel_path), output_path)
 
     assert result.script_path.read_text(encoding="utf-8") == script_contents
+
+
+def test_marimo_example_round_trip(tmp_path: Path) -> None:
+    example_path = Path(__file__).parent / "examples" / "marimo_notebook.py"
+    script_text = example_path.read_text(encoding="utf-8")
+    script_path = tmp_path / "marimo_notebook.py"
+    script_path.write_text(script_text, encoding="utf-8")
+
+    build_result = core.build_script_to_wheel(script_path, tmp_path)
+
+    output_path = tmp_path / "imported_marimo_notebook.py"
+    import_result = core.import_wheel_to_script(
+        str(build_result.wheel_path), output_path
+    )
+
+    assert import_result.script_path == output_path
+    assert import_result.script_path.read_text(encoding="utf-8") == script_text
