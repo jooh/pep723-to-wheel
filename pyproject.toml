@@ -30,13 +30,6 @@ dev = [
 [tool.ty.src]
 exclude = ["tests/examples/**"]
 
-[tool.pytest.ini_options]
-addopts = [
-    "--cov=pep723_to_wheel",
-    "--cov-report=term-missing",
-    "--cov-report=xml",
-]
-
 [tool.coverage.run]
 branch = true
 source = ["pep723_to_wheel"]
