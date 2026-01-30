@@ -131,7 +131,7 @@ def _extract_requires_python(metadata_text: str) -> str | None:
 def _calendar_version(script_path: Path) -> str:
     mtime = script_path.stat().st_mtime
     timestamp = datetime.fromtimestamp(mtime, tz=UTC)
-    return f"{timestamp.year}.{timestamp.month:02d}.{timestamp.day:02d}.{int(mtime)}"
+    return f"{timestamp.year}.{timestamp.month:02d}.{int(mtime)}"
 
 
 def _build_temp_project(
