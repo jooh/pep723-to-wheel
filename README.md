@@ -1,6 +1,7 @@
 # pep723-to-wheel
 
 [![CI](https://github.com/jooh/pep723-to-wheel/actions/workflows/ci.yml/badge.svg)](https://github.com/jooh/pep723-to-wheel/actions/workflows/ci.yml)
+![Coverage](https://codecov.io/gh/jooh/pep723-to-wheel/branch/main/graph/badge.svg)
 
 A small utility for converting [PEP 723](https://peps.python.org/pep-0723/) inline dependency scripts into wheels and reconstructing scripts from wheels.
 
