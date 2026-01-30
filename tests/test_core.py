@@ -207,4 +207,5 @@ def test_marimo_example_round_trip(tmp_path: Path) -> None:
         str(build_result.wheel_path), output_path
     )
 
+    assert import_result.script_path == output_path
     assert import_result.script_path.read_text(encoding="utf-8") == script_text
