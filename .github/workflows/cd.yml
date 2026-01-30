@@ -20,6 +20,8 @@ jobs:
         with:
           python-version: "3.12"
       - uses: astral-sh/setup-uv@v6
+      - name: Install cd_version dependencies
+        run: python -m pip install tomli-w
       - name: Determine version
         id: version
         run: |
