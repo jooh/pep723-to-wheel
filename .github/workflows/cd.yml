@@ -27,7 +27,7 @@ jobs:
         run: |
           LATEST_TAG="$(git tag --list 'v*' --sort=-v:refname | head -n1)"
           export LATEST_TAG
-          python .github/workflows/cd_version.py
+          uv run python .github/workflows/cd_version.py
       - name: Commit version bump
         run: |
           if git status --porcelain | grep -q "pyproject.toml"; then
