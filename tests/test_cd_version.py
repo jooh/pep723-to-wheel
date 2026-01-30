@@ -45,8 +45,8 @@ def test_bumps_patch_when_major_minor_match(tmp_path, monkeypatch) -> None:
     cd_version = load_cd_version()
     cd_version.main()
 
-    assert read_output(output_path) == "1.2.4"
-    assert 'version = "1.2.4"' in (tmp_path / "pyproject.toml").read_text()
+    assert read_output(output_path) == "1.2.6"
+    assert 'version = "1.2.6"' in (tmp_path / "pyproject.toml").read_text()
 
 
 def test_skips_bump_on_major_minor_change(tmp_path, monkeypatch) -> None:
@@ -75,3 +75,17 @@ def test_ignores_invalid_latest_tag(tmp_path, monkeypatch) -> None:
 
     assert read_output(output_path) == "0.4.1"
     assert 'version = "0.4.1"' in (tmp_path / "pyproject.toml").read_text()
+
+
+def test_bumps_patch_without_downgrade(tmp_path, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    write_pyproject(tmp_path / "pyproject.toml", "1.2.10")
+    output_path = tmp_path / "out.txt"
+    monkeypatch.setenv("LATEST_TAG", "v1.2.5")
+    monkeypatch.setenv("GITHUB_OUTPUT", str(output_path))
+
+    cd_version = load_cd_version()
+    cd_version.main()
+
+    assert read_output(output_path) == "1.2.11"
+    assert 'version = "1.2.11"' in (tmp_path / "pyproject.toml").read_text()
