@@ -1,4 +1,4 @@
-.PHONY: test typecheck ruff
+.PHONY: test typecheck ruff all-tests
 
 test:
 	uv run pytest
@@ -8,3 +8,5 @@ typecheck:
 
 ruff:
 	uv run ruff check .
+
+all-tests: test typecheck ruff
