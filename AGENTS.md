@@ -8,6 +8,7 @@
 ## Development setup
 - Requires Python 3.12+ (see `pyproject.toml`).
 - Environment management is with uv.
+- Run Python and related CLI tools via `uv run` so they use the uv virtualenv.
 
 ## Common commands
 - Run tests: `make test`
