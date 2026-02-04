@@ -9,7 +9,3 @@ app = typer.Typer()
 def hello(name: str = "world") -> None:
     """Say hello."""
     print(f"Hello, {name}!")
-
-
-if __name__ == "__main__":
-    app()
