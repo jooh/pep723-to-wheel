@@ -1,0 +1,50 @@
+_min_copier_version: "9.0.0"
+
+_answers_file: .copier-answers.yml
+
+_exclude:
+  - copier.yml
+  - .copier-answers.yml
+  - "*.pyc"
+  - __pycache__
+  - .git
+  - "{% if not has_cli %}**/cli.py{% endif %}"
+
+_jinja_extensions:
+  - jinja2_time.TimeExtension
+
+project_name:
+  type: str
+  help: Project name (kebab-case, e.g., my-project)
+  validator: "{% if not (project_name | regex_search('^[a-z][a-z0-9]*(-[a-z0-9]+)*$')) %}Must be lowercase kebab-case (e.g., my-project){% endif %}"
+
+package_name:
+  type: str
+  default: "{{ project_name | replace('-', '_') }}"
+  help: Python package name (snake_case, auto-derived from project_name)
+
+description:
+  type: str
+  help: One-line project description
+
+min_python_version:
+  type: str
+  help: Minimum Python version
+  choices:
+    "3.12": "3.12"
+    "3.13": "3.13"
+    "3.14": "3.14"
+  default: "3.12"
+
+has_cli:
+  type: bool
+  default: true
+  help: Include a Typer-based CLI
+
+author_name:
+  type: str
+  help: Author name (for LICENSE and metadata)
+
+repo_owner:
+  type: str
+  help: GitHub username or organization (for repository URLs)

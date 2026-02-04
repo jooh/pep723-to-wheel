@@ -25,7 +25,7 @@ def write_pyproject(path: Path, version: str) -> None:
     path.write_text(
         f"""
 [project]
-name = "pep723-to-wheel"
+name = "{{ project_name }}"
 version = "{version}"
 """
     )

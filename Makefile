@@ -1,7 +1,7 @@
 .PHONY: test typecheck ruff all-tests
 
 test:
-	uv run pytest --cov=pep723_to_wheel --cov-report=term-missing --cov-report=xml
+	uv run pytest --cov={{ package_name }} --cov-report=term-missing --cov-report=xml
 
 typecheck:
 	uv run ty check

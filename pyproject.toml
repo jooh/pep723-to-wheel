@@ -1,32 +1,32 @@
 [project]
-name = "pep723-to-wheel"
-version = "0.1.2"
-description = "PoC for pep-723 script to wheel and back"
+name = "{{ project_name }}"
+version = "0.0.0"
+description = "{{ description }}"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">={{ min_python_version }}"
 classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: {{ min_python_version }}",
 ]
 dependencies = [
-    "pydantic>=2.5",
-    "tomli-w>=1.1.0",
+{%- if has_cli %}
     "typer>=0.21.1",
+{%- endif %}
 ]
 
 [project.license]
 file = "LICENSE"
 
 [project.urls]
-Homepage = "https://github.com/jooh/pep723-to-wheel"
-Repository = "https://github.com/jooh/pep723-to-wheel"
-Issues = "https://github.com/jooh/pep723-to-wheel/issues"
-
+Homepage = "https://github.com/{{ repo_owner }}/{{ project_name }}"
+Repository = "https://github.com/{{ repo_owner }}/{{ project_name }}"
+Issues = "https://github.com/{{ repo_owner }}/{{ project_name }}/issues"
+{% if has_cli %}
 [project.scripts]
-pep723-to-wheel = "pep723_to_wheel.cli:app"
-
+{{ project_name }} = "{{ package_name }}.cli:app"
+{% endif %}
 [build-system]
 requires = [
     "hatchling>=1.27.0",
@@ -35,18 +35,13 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = [
-    "src/pep723_to_wheel",
-]
-
-[tool.ty.src]
-exclude = [
-    "tests/examples/**",
+    "src/{{ package_name }}",
 ]
 
 [tool.coverage.run]
 branch = true
 source = [
-    "pep723_to_wheel",
+    "{{ package_name }}",
 ]
 
 [tool.coverage.report]

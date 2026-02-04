@@ -4,6 +4,10 @@ on:
   push:
     branches: [main]
 
+# CHANGE ME: Set to true when ready to publish to PyPI
+env:
+  PUBLISH_TO_PYPI: false
+
 permissions:
   contents: write
   id-token: write
@@ -18,7 +22,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "{{ min_python_version }}"
       - uses: astral-sh/setup-uv@v6
       - name: Install dependencies
         run: uv sync --frozen
@@ -34,12 +38,12 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git add pyproject.toml
-            git commit -m "chore: bump version to v${{ steps.version.outputs.version }}"
+            git commit -m "chore: bump version to v{% raw %}${{ steps.version.outputs.version }}{% endraw %}"
             git push
           fi
       - name: Tag release
         run: |
-          VERSION="v${{ steps.version.outputs.version }}"
+          VERSION="v{% raw %}${{ steps.version.outputs.version }}{% endraw %}"
           if git tag -l "$VERSION" | grep -q "$VERSION"; then
             echo "Tag $VERSION already exists."
           else
@@ -49,10 +53,11 @@ jobs:
       - name: Build
         run: uv build
       - name: Publish to PyPI (Trusted Publishing)
+        if: env.PUBLISH_TO_PYPI == 'true'
         run: uv publish
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
           files: dist/*.whl
-          tag_name: v${{ steps.version.outputs.version }}
-          name: v${{ steps.version.outputs.version }}
+          tag_name: v{% raw %}${{ steps.version.outputs.version }}{% endraw %}
+          name: v{% raw %}${{ steps.version.outputs.version }}{% endraw %}

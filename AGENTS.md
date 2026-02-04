@@ -1,12 +1,12 @@
-# Agent guide for pep723-to-wheel
+# Agent guide for {{ project_name }}
 
 ## Repository overview
-- `src/pep723_to_wheel/` contains the library and CLI implementation.
+- `src/{{ package_name }}/` contains the library{% if has_cli %} and CLI{% endif %} implementation.
 - `tests/` holds pytest coverage for core behavior.
 - `pyproject.toml` defines dependencies, entry points, and tooling.
 
 ## Development setup
-- Requires Python 3.12+ (see `pyproject.toml`).
+- Requires Python {{ min_python_version }}+ (see `pyproject.toml`).
 - Environment management is with uv.
 - Run Python and related CLI tools via `uv run` so they use the uv virtualenv.
 
@@ -20,9 +20,13 @@
 - TDD for all code development - write test, then run to verify it fails, then develop, then verify the test passes.
 - All tasks should end by running `make all-tests` and verifying it passes.
 - Prefer updating or adding pytest tests in `tests/` for behavior changes.
-- For CLI changes, update both `src/pep723_to_wheel/cli.py` and any relevant tests.
-- Target modern Python 3.12+ syntax, no need to be backwards compatible.
+{%- if has_cli %}
+- For CLI changes, update both `src/{{ package_name }}/cli.py` and any relevant tests.
+{%- endif %}
+- Target modern Python {{ min_python_version }}+ syntax, no need to be backwards compatible.
 
 ## Tips
-- Use `pep723_to_wheel.core` for the main build/import logic.
-- The CLI entry point is `pep723_to_wheel.cli:app`.
+- The main package is `{{ package_name }}`.
+{%- if has_cli %}
+- The CLI entry point is `{{ package_name }}.cli:app`.
+{%- endif %}

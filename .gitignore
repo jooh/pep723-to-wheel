@@ -52,7 +52,7 @@ venv/
 ENV/
 
 # Pyenv
-.python-version
+# .python-version  # Kept in repo as copier template
 
 # OS files
 .DS_Store
